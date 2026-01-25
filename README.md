@@ -1,4 +1,4 @@
-Zabbix Mysql Container Setup
+Zabbix Zabbix 7.0.22 Mysql Container Setup
 
 run docker-compose up -d
 
