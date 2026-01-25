@@ -1,7 +1,7 @@
 version: '3.5'
 
 services:
-  zabbixdb:  # Nome deve ser igual ao DB_SERVER_HOST do seu arquivo
+  zabbixdb:
     image: mysql:8.0-oracle
     restart: always
     env_file: .env_vars
@@ -14,12 +14,18 @@ services:
     networks:
       zbx_net:
 
-  zabbixserver:  # Nome deve ser igual ao ZBX_SERVER_HOST do seu arquivo
+  zabbixserver:
     image: zabbix/zabbix-server-mysql:alpine-7.0-latest
     restart: always
     ports:
       - "10051:10051"
     env_file: .env_vars
+    environment:
+      - ZBX_ENABLE_SNMP_TRAPS=true  # Ativa o processo de leitura de traps 
+    volumes:
+      - ./zbx_env/var/lib/zabbix/snmptraps:/var/lib/zabbix/snmptraps:rw # Volume compartilhado
+      - ./zbx_env/usr/lib/zabbix/alertscripts:/usr/lib/zabbix/alertscripts:ro
+      - ./zbx_env/usr/lib/zabbix/externalscripts:/usr/lib/zabbix/externalscripts:ro
     depends_on:
       - zabbixdb
     networks:
@@ -29,11 +35,21 @@ services:
     image: zabbix/zabbix-web-nginx-mysql:alpine-7.0-latest
     restart: always
     ports:
-      - "80:8080"  # Mantém o mapeamento para a porta interna 8080
+      - "80:8080"
     env_file: .env_vars
     depends_on:
       - zabbixdb
       - zabbixserver
+    networks:
+      zbx_net:
+
+  zabbix-snmptraps:
+    image: zabbix/zabbix-snmptraps:alpine-7.0-latest
+    restart: always
+    ports:
+      - "162:1162/udp" # Mapeia a porta padrão de traps UDP do host para a interna
+    volumes:
+      - ./zbx_env/var/lib/zabbix/snmptraps:/var/lib/zabbix/snmptraps:rw # Mesmo volume do servidor
     networks:
       zbx_net:
 
