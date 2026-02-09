@@ -21,9 +21,9 @@ services:
       - "10051:10051"
     env_file: .env_vars
     environment:
-      - ZBX_ENABLE_SNMP_TRAPS=true  # Ativa o processo de leitura de traps 
+      - ZBX_ENABLE_SNMP_TRAPS=true
     volumes:
-      - ./zbx_env/var/lib/zabbix/snmptraps:/var/lib/zabbix/snmptraps:rw # Volume compartilhado
+      - ./zbx_env/var/lib/zabbix/snmptraps:/var/lib/zabbix/snmptraps:rw
       - ./zbx_env/usr/lib/zabbix/alertscripts:/usr/lib/zabbix/alertscripts:ro
       - ./zbx_env/usr/lib/zabbix/externalscripts:/usr/lib/zabbix/externalscripts:ro
     depends_on:
@@ -47,9 +47,21 @@ services:
     image: zabbix/zabbix-snmptraps:alpine-7.0-latest
     restart: always
     ports:
-      - "162:1162/udp" # Mapeia a porta padrão de traps UDP do host para a interna
+      - "162:1162/udp"
     volumes:
-      - ./zbx_env/var/lib/zabbix/snmptraps:/var/lib/zabbix/snmptraps:rw # Mesmo volume do servidor
+      - ./zbx_env/var/lib/zabbix/snmptraps:/var/lib/zabbix/snmptraps:rw
+    networks:
+      zbx_net:
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_INSTALL_PLUGINS=alexanderzobnin-zabbix-app
+    volumes:
+      - grafana_storage:/var/lib/grafana
     networks:
       zbx_net:
 
@@ -59,3 +71,6 @@ networks:
     ipam:
       config:
         - subnet: 172.16.233.0/24
+
+volumes:
+  grafana_storage:
